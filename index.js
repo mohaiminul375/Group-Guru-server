@@ -7,7 +7,7 @@ app.use(express.json());
 app.use(cors());
 console.log(process.env.DB_USER);
 
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const uri = `mongodb+srv://group_gure:7To2b6eDLFiBr4Pe@cluster0.ixszr3u.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -27,6 +27,12 @@ async function run() {
     // get
    app.get('/all-assignment',async(req,res)=>{
     const result= await assignmentCollection.find().toArray()
+    res.send(result)
+   })
+   app.get('/all-assignment/:id',async(req,res)=>{
+    const id=req.params.id;
+    const query={_id:new ObjectId(id)}
+    const result= await assignmentCollection.findOne(query)
     res.send(result)
    })
     // post
