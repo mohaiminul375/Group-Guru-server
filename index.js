@@ -5,11 +5,10 @@ const port = process.env.PORT || 5000;
 
 app.use(express.json());
 app.use(cors());
-console.log(process.env.DB_USER)
+console.log(process.env.DB_USER);
 
 const { MongoClient, ServerApiVersion } = require("mongodb");
-const uri =
-  `mongodb+srv://group_gure:7To2b6eDLFiBr4Pe@cluster0.ixszr3u.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
+const uri = `mongodb+srv://group_gure:7To2b6eDLFiBr4Pe@cluster0.ixszr3u.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -24,7 +23,16 @@ async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
     // await client.connect();
+   const assignmentCollection=client.db('group-guru').collection('all-assignment')
+    // get
 
+    // post
+    app.post('/all-assignment',async(req,res)=>{
+        const assignment=req.body;
+        const result = await assignmentCollection.insertOne(assignment);
+        res.send(result)
+
+    });
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
