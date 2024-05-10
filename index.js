@@ -25,7 +25,10 @@ async function run() {
     // await client.connect();
    const assignmentCollection=client.db('group-guru').collection('all-assignment')
     // get
-
+   app.get('/all-assignment',async(req,res)=>{
+    const result= await assignmentCollection.find().toArray()
+    res.send(result)
+   })
     // post
     app.post('/all-assignment',async(req,res)=>{
         const assignment=req.body;
