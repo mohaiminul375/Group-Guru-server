@@ -2,7 +2,7 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 const port = process.env.PORT || 5000;
-require('dotenv').config()
+require("dotenv").config();
 
 app.use(express.json());
 app.use(cors());
@@ -30,34 +30,43 @@ async function run() {
     const submissionCollection = client
       .db("group-guru")
       .collection("submitted-assignment");
+
     // get
+    // get all assignmet
     app.get("/all-assignment", async (req, res) => {
       const result = await assignmentCollection.find().toArray();
       res.send(result);
     });
+
+    // ge assignment by id
     app.get("/all-assignment/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await assignmentCollection.findOne(query);
       res.send(result);
     });
+
     // get submitted assignment by user (must use jwt)
-    app.get('/submitted-assignment',async(req,res)=>{
-      let query={};
-      if(req.query?.email){
-        query={examinee_email:req.query.email}
+    app.get("/submitted-assignment", async (req, res) => {
+      let query = {};
+      if (req.query?.email) {
+        query = { examinee_email: req.query.email };
       }
-      const result= await submissionCollection.find(query).toArray()
-      res.send(result)
-    })
-    // get data by pending
-     app.get('/submitted-assignment',async(req,res)=>{
-      // const assignments=req.params.status;
-      const query={status:'pending'}
       const result = await submissionCollection.find(query).toArray();
-      res.send(result)
-      
-     })
+      res.send(result);
+    });
+
+    // get data by pending
+    app.get("/pending-assignment", async (req, res) => {
+      // const assignments=req.params.status;
+      let query = {};
+      if (req.query?.status) {
+        query = { status: "pending" };
+      }
+      // const query={status:'pending'}
+      const result = await submissionCollection.find(query).toArray();
+      res.send(result);
+    });
 
     // post
     app.post("/all-assignment", async (req, res) => {
@@ -71,6 +80,24 @@ async function run() {
       const result = await submissionCollection.insertOne(submission);
       res.send(result);
     });
+
+    // patch
+    app.patch("/submitted-assignment/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updateSubmission = req.body;
+      console.log(updateSubmission);
+      const updateDoc = {
+        $set: {
+          obtain_marks: updateSubmission.obtain_marks,
+          feedback: updateSubmission.feedback,
+          status: updateSubmission.status,
+        },
+      };
+      const result = await submissionCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+
     // delete
     app.delete("/all-assignment/:id", async (req, res) => {
       const id = req.params.id;
