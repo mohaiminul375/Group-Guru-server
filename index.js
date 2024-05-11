@@ -51,9 +51,13 @@ async function run() {
       res.send(result)
     })
     // get data by pending
-    //  app.get('/submitted-assignment',async(req,res)=>{
-    //   let query={};
-    //  })
+     app.get('/submitted-assignment',async(req,res)=>{
+      // const assignments=req.params.status;
+      const query={status:'pending'}
+      const result = await submissionCollection.find(query).toArray();
+      res.send(result)
+      
+     })
 
     // post
     app.post("/all-assignment", async (req, res) => {
