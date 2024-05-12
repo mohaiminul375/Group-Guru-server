@@ -86,7 +86,7 @@ async function run() {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
       const updateSubmission = req.body;
-      console.log(updateSubmission);
+      // console.log(updateSubmission);
       const updateDoc = {
         $set: {
           obtain_marks: updateSubmission.obtain_marks,
@@ -96,6 +96,20 @@ async function run() {
       };
       const result = await submissionCollection.updateOne(filter, updateDoc);
       res.send(result);
+    });
+    // path assignment data
+    app.patch("/all-assignment/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updateAssignment=req.body;
+      console.log(updateAssignment)
+      const updateDoc={
+        $set:{
+          ...updateAssignment
+        }
+      }
+      const result=await assignmentCollection.updateOne(filter,updateDoc)
+      res.send(result)
     });
 
     // delete
