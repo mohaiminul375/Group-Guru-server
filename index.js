@@ -11,10 +11,27 @@ const corsOptions = {
   credentials: true,
   optionSuccessStatus: 200,
 };
-
+// middle ware
 app.use(express.json());
 app.use(cors(corsOptions));
 app.use(cookieParser());
+
+// verify jwt token]
+const verifyToken = (req, res, next) => {
+  const token = req.cookies?.token;
+  if(!token) return res.status(401).send({message:'unauthorized access'})
+  if (token) {
+    jwt.verify(token, process.env.ACCESS_TOKEN, (err, decoded) => {
+      if (err) {
+        console.log("error", err);
+        return res.status(401).send({message:'unauthorized access'})
+      }
+      console.log("decoded", decoded);
+      req.user = decoded;
+      next();
+    });
+  }
+};
 
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ixszr3u.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
@@ -82,7 +99,11 @@ async function run() {
     });
 
     // get submitted assignment by user (must use jwt)
-    app.get("/submitted-assignment", async (req, res) => {
+    app.get("/submitted-assignment",verifyToken, async (req, res) => {
+      const tokenEmail=req.user.email;
+      if(req.query?.email !== tokenEmail){
+       return res.status(403).send({message:'forbidden access'})
+      }
       let query = {};
       if (req.query?.email) {
         query = { examinee_email: req.query.email };
