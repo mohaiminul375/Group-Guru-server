@@ -1,12 +1,23 @@
 const express = require("express");
 const app = express();
 const cors = require("cors");
-const port = process.env.PORT || 5000;
+const jwt = require("jsonwebtoken");
+const cookieParser=require("cookie-parser");
 require("dotenv").config();
+const port = process.env.PORT || 5000;
+
+const corsOptions = {
+  origin: [
+    'http://localhost:5173',
+    'http://localhost:5174',
+  ],
+  credentials: true,
+  optionSuccessStatus: 200,
+}
 
 app.use(express.json());
-app.use(cors());
-console.log(process.env.DB_USER);
+app.use(cors(corsOptions));
+app.use(cookieParser())
 
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ixszr3u.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
@@ -36,6 +47,19 @@ async function run() {
     app.get("/all-assignment", async (req, res) => {
       const result = await assignmentCollection.find().toArray();
       res.send(result);
+    });
+
+    // jwt
+    app.post("/jwt", async (req, res) => {
+      const user = req.body;
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN, {
+        expiresIn: "72h",
+      });
+      res.cookie("token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+      }).send({success:true});
     });
 
     // ge assignment by id
@@ -101,15 +125,15 @@ async function run() {
     app.patch("/all-assignment/:id", async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
-      const updateAssignment=req.body;
-      console.log(updateAssignment)
-      const updateDoc={
-        $set:{
-          ...updateAssignment
-        }
-      }
-      const result=await assignmentCollection.updateOne(filter,updateDoc)
-      res.send(result)
+      const updateAssignment = req.body;
+      console.log(updateAssignment);
+      const updateDoc = {
+        $set: {
+          ...updateAssignment,
+        },
+      };
+      const result = await assignmentCollection.updateOne(filter, updateDoc);
+      res.send(result);
     });
 
     // delete
