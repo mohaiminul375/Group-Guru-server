@@ -19,12 +19,12 @@ app.use(cookieParser());
 // verify jwt token]
 const verifyToken = (req, res, next) => {
   const token = req.cookies?.token;
-  if(!token) return res.status(401).send({message:'unauthorized access'})
+  if (!token) return res.status(401).send({ message: "unauthorized access" });
   if (token) {
     jwt.verify(token, process.env.ACCESS_TOKEN, (err, decoded) => {
       if (err) {
         console.log("error", err);
-        return res.status(401).send({message:'unauthorized access'})
+        return res.status(401).send({ message: "unauthorized access" });
       }
       console.log("decoded", decoded);
       req.user = decoded;
@@ -56,13 +56,6 @@ async function run() {
       .db("group-guru")
       .collection("submitted-assignment");
 
-    // get
-    // get all assignmet
-    app.get("/all-assignment", async (req, res) => {
-      const result = await assignmentCollection.find().toArray();
-      res.send(result);
-    });
-
     // jwt create jwt
     app.post("/jwt", async (req, res) => {
       const email = req.body;
@@ -90,8 +83,15 @@ async function run() {
         .send({ success: true });
     });
 
+    // get
+    // get all assignmet
+    app.get("/all-assignment", async (req, res) => {
+      const result = await assignmentCollection.find().toArray();
+      res.send(result);
+    });
+
     // ge assignment by id
-    app.get("/all-assignment/:id", async (req, res) => {
+    app.get("/all-assignment/:id", verifyToken, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await assignmentCollection.findOne(query);
@@ -99,10 +99,10 @@ async function run() {
     });
 
     // get submitted assignment by user (must use jwt)
-    app.get("/submitted-assignment",verifyToken, async (req, res) => {
-      const tokenEmail=req.user.email;
-      if(req.query?.email !== tokenEmail){
-       return res.status(403).send({message:'forbidden access'})
+    app.get("/submitted-assignment", verifyToken, async (req, res) => {
+      const tokenEmail = req.user.email;
+      if (req.query?.email !== tokenEmail) {
+        return res.status(403).send({ message: "forbidden access" });
       }
       let query = {};
       if (req.query?.email) {
@@ -113,8 +113,9 @@ async function run() {
     });
 
     // get data by pending
-    app.get("/pending-assignment", async (req, res) => {
+    app.get("/pending-assignment", verifyToken, async (req, res) => {
       // const assignments=req.params.status;
+      
       let query = {};
       if (req.query?.status) {
         query = { status: "pending" };
@@ -125,20 +126,20 @@ async function run() {
     });
 
     // post
-    app.post("/all-assignment", async (req, res) => {
+    app.post("/all-assignment",verifyToken, async (req, res) => {
       const assignment = req.body;
       const result = await assignmentCollection.insertOne(assignment);
       res.send(result);
     });
     // post all pending assignment
-    app.post("/submitted-assignment", async (req, res) => {
+    app.post("/submitted-assignment",verifyToken,async (req, res) => {
       const submission = req.body;
       const result = await submissionCollection.insertOne(submission);
       res.send(result);
     });
 
     // patch
-    app.patch("/submitted-assignment/:id", async (req, res) => {
+    app.patch("/submitted-assignment/:id",verifyToken, async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
       const updateSubmission = req.body;
@@ -154,7 +155,7 @@ async function run() {
       res.send(result);
     });
     // path assignment data
-    app.patch("/all-assignment/:id", async (req, res) => {
+    app.patch("/all-assignment/:id", verifyToken,async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
       const updateAssignment = req.body;
@@ -169,7 +170,7 @@ async function run() {
     });
 
     // delete
-    app.delete("/all-assignment/:id", async (req, res) => {
+    app.delete("/all-assignment/:id", verifyToken,async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await assignmentCollection.deleteOne(query);
