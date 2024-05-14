@@ -72,7 +72,7 @@ async function run() {
     });
     // clear token after logout
 
-    app.get("/logout", async (req, res) => {
+    app.get("/logout", (req, res) => {
       res
         .clearCookie("token", {
           httpOnly: true,
@@ -85,10 +85,38 @@ async function run() {
 
     // get
     // get all assignmet
-    app.get("/all-assignment", async (req, res) => {
-      const result = await assignmentCollection.find().toArray();
-      res.send(result);
-    });
+    // app.get("/all-assignment", async (req, res) => {
+    //   const result = await assignmentCollection.find().toArray();
+    //   res.send(result);
+    // });
+
+
+
+   //  count all assignment
+   app.get("/all-assignment-count", async (req, res) => {
+    const filter=req.query.filter;
+    let query={};
+    if(filter) query={difficulty_level:filter}
+    const count = await assignmentCollection.countDocuments(query);
+    res.send({ count });
+  });
+  // all assignment with filter
+  app.get("/all-assignment", async (req, res) => {
+    const size = parseInt(req.query.size);
+    const page = parseInt(req.query.page) - 1;
+    const filter=req.query.filter;
+    console.log(size, page);
+    let query={}
+    if(filter) query={difficulty_level:filter}
+    const result = await assignmentCollection
+      .find(query)
+      .skip(page * size)
+      .limit(size)
+      .toArray();
+    res.send(result);
+  });
+
+
 
     // ge assignment by id
     app.get("/all-assignment/:id", verifyToken, async (req, res) => {
@@ -115,7 +143,7 @@ async function run() {
     // get data by pending
     app.get("/pending-assignment", verifyToken, async (req, res) => {
       // const assignments=req.params.status;
-      
+
       let query = {};
       if (req.query?.status) {
         query = { status: "pending" };
@@ -126,20 +154,20 @@ async function run() {
     });
 
     // post
-    app.post("/all-assignment",verifyToken, async (req, res) => {
+    app.post("/all-assignment", verifyToken, async (req, res) => {
       const assignment = req.body;
       const result = await assignmentCollection.insertOne(assignment);
       res.send(result);
     });
     // post all pending assignment
-    app.post("/submitted-assignment",verifyToken,async (req, res) => {
+    app.post("/submitted-assignment", verifyToken, async (req, res) => {
       const submission = req.body;
       const result = await submissionCollection.insertOne(submission);
       res.send(result);
     });
 
     // patch
-    app.patch("/submitted-assignment/:id",verifyToken, async (req, res) => {
+    app.patch("/submitted-assignment/:id", verifyToken, async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
       const updateSubmission = req.body;
@@ -155,7 +183,7 @@ async function run() {
       res.send(result);
     });
     // path assignment data
-    app.patch("/all-assignment/:id", verifyToken,async (req, res) => {
+    app.patch("/all-assignment/:id", verifyToken, async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
       const updateAssignment = req.body;
@@ -170,13 +198,14 @@ async function run() {
     });
 
     // delete
-    app.delete("/all-assignment/:id", verifyToken,async (req, res) => {
+    app.delete("/all-assignment/:id", verifyToken, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await assignmentCollection.deleteOne(query);
       res.send(result);
     });
 
+    
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
