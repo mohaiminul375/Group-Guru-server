@@ -16,7 +16,7 @@ app.use(express.json());
 app.use(cors(corsOptions));
 app.use(cookieParser());
 
-// verify jwt token]
+// verify jwt token
 const verifyToken = (req, res, next) => {
   const token = req.cookies?.token;
   if (!token) return res.status(401).send({ message: "unauthorized access" });
@@ -75,9 +75,9 @@ async function run() {
     app.get("/logout", (req, res) => {
       res
         .clearCookie("token", {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
-          sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+          // httpOnly: true,
+          secure: true,
+          sameSite:none,
           maxAge: 0,
         })
         .send({ success: true });
