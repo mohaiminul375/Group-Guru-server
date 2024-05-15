@@ -77,7 +77,7 @@ async function run() {
         .clearCookie("token", {
           // httpOnly: true,
           secure: true,
-          sameSite:none,
+          sameSite:'none',
           maxAge: 0,
         })
         .send({ success: true });
