@@ -7,7 +7,11 @@ require("dotenv").config();
 const port = process.env.PORT || 5000;
 
 const corsOptions = {
-  origin: ["http://localhost:5173", "http://localhost:5174",'https://group-guru-375m.web.app'],
+  origin: [
+    "http://localhost:5173",
+    "http://localhost:5174",
+    "https://group-guru-375m.web.app",
+  ],
   credentials: true,
   optionSuccessStatus: 200,
 };
@@ -77,7 +81,7 @@ async function run() {
         .clearCookie("token", {
           // httpOnly: true,
           secure: true,
-          sameSite:'none',
+          sameSite: "none",
           maxAge: 0,
         })
         .send({ success: true });
@@ -90,33 +94,29 @@ async function run() {
     //   res.send(result);
     // });
 
-
-
-   //  count all assignment
-   app.get("/all-assignment-count", async (req, res) => {
-    const filter=req.query.filter;
-    let query={};
-    if(filter) query={difficulty_level:filter}
-    const count = await assignmentCollection.countDocuments(query);
-    res.send({ count });
-  });
-  // all assignment with filter
-  app.get("/all-assignment", async (req, res) => {
-    const size = parseInt(req.query.size);
-    const page = parseInt(req.query.page) - 1;
-    const filter=req.query.filter;
-    console.log(size, page);
-    let query={}
-    if(filter) query={difficulty_level:filter}
-    const result = await assignmentCollection
-      .find(query)
-      .skip(page * size)
-      .limit(size)
-      .toArray();
-    res.send(result);
-  });
-
-
+    //  count all assignment
+    app.get("/all-assignment-count", async (req, res) => {
+      const filter = req.query.filter;
+      let query = {};
+      if (filter) query = { difficulty_level: filter };
+      const count = await assignmentCollection.countDocuments(query);
+      res.send({ count });
+    });
+    // all assignment with filter
+    app.get("/all-assignment", async (req, res) => {
+      const size = parseInt(req.query.size);
+      const page = parseInt(req.query.page) - 1;
+      const filter = req.query.filter;
+      console.log(size, page);
+      let query = {};
+      if (filter) query = { difficulty_level: filter };
+      const result = await assignmentCollection
+        .find(query)
+        .skip(page * size)
+        .limit(size)
+        .toArray();
+      res.send(result);
+    });
 
     // ge assignment by id
     app.get("/all-assignment/:id", verifyToken, async (req, res) => {
@@ -126,6 +126,25 @@ async function run() {
       res.send(result);
     });
 
+    // all submitted assignment
+    app.get("/all-submitted-assignment",verifyToken, async (req, res) => {
+      const result = await submissionCollection
+        .aggregate([
+          { $match: { status: "completed" } },
+          {
+            $group: {
+              _id: { email: "$examinee_email", name: "$examinee_name" },
+              averageMarks: { $avg: { $toDouble: "$obtain_marks" } },
+              totalCompletedAssignments: {
+                $sum: { $cond: [{ $eq: ["$status", "completed"] }, 1, 0] },
+              },
+            },
+          },
+          { $sort: { averageMarks: -1 } }
+        ])
+        .toArray();
+      res.send(result);
+    });
     // get submitted assignment by user (must use jwt)
     app.get("/submitted-assignment", verifyToken, async (req, res) => {
       const tokenEmail = req.user.email;
@@ -205,7 +224,6 @@ async function run() {
       res.send(result);
     });
 
-    
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
